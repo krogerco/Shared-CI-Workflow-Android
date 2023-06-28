@@ -1,0 +1,229 @@
+name: Semantic Library
+
+env:
+  ANDROID: true
+
+on:
+  workflow_call:
+    inputs:
+      api_level:
+        description: 'The Android API level to run instrumented tests against'
+        type: string
+        required: false
+        default: '27'
+      build_command:
+        description: 'The gradle command to build the app'
+        type: string
+        required: false
+        default: 'assemble'
+      commitlint_version:
+        description: 'The version of commitlint to use'
+        required: false
+        type: string
+        default: '17'
+      conventional_changelog_version:
+        description: 'The version of conventional changelog to use'
+        required: false
+        type: string
+        default: '5.0.0'
+      instrumentation_test_script:
+        description: 'The script to run for instrumentation test'
+        type: string
+        required: false
+        default: ./gradlew --build-cache --no-daemon connectedCheck
+      java_version:
+        description: 'The version of java to use'
+        type: string
+        required: false
+        default: '11'
+      ktlint_version:
+        description: 'The version of ktlint to use'
+        type: string
+        required: false
+        default: '0.46.1'
+      lint_command:
+        description: 'The gradle command for linting'
+        type: string
+        required: false
+        default: 'lintKotlin'
+      node_version:
+        description: 'The version of nodejs to use'
+        type: string
+        required: false
+        default: '18'
+      publish_command:
+        description: 'The gradle command for publishing'
+        type: string
+        required: false
+        default: 'publish'
+      semantic_release_version:
+        description: 'The version of semantic release to use'
+        required: false
+        type: string
+        default: '21.0.1'
+      test_command:
+        description: 'The gradle command for running your tests'
+        type: string
+        required: false
+        default: 'test jacocoTestReport'
+    secrets:
+      REPO_ACCESS_TOKEN:
+        required: true
+      ORG_GRADLE_PROJECT_mavenCentralUsername:
+        required: true
+      ORG_GRADLE_PROJECT_mavenCentralPassword:
+        required: true
+      ORG_GRADLE_PROJECT_signingInMemoryKey:
+        required: true
+      ORG_GRADLE_PROJECT_signingInMemoryKeyId:
+        required: true
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword:
+        required: true
+
+jobs:
+  commit_lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 0
+      - name: Run Commit Lint
+        id: commitlint
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/commit-lint@v1.0.0
+        with:
+          node_version: ${{ inputs.node_version }}
+          commitlint_version: ${{ inputs.commitlint_version }}
+
+  code_lint:
+    name: Code Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Run ktlint
+        id: ktlint
+        if: inputs.ktlint_version != '-1'
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/code-lint@v1.0.0
+        with:
+          java_version: ${{ inputs.java_version }}
+          ktlint_version: ${{ inputs.ktlint_version }}
+      - name: Run Gradle Lint Task
+        if: inputs.ktlint_version == '-1'
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/gradle-task@v1.0.0
+        with:
+          gradle_command: ${{ inputs.lint_command }}
+          java_version: ${{ inputs.java_version }}
+          setup_android_sdk: 'false'
+
+  determine_version:
+    name: Version Determination
+    runs-on: ubuntu-latest
+    outputs:
+      releaseType: ${{ steps.determine_version.outputs.releaseType }}
+      releaseChannel: ${{ steps.determine_version.outputs.releaseChannel }}
+      buildVersion: ${{ steps.determine_version.outputs.buildVersion }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Determine Version
+        id: determine_version
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/determine-version@v1.0.0
+        with:
+          node_version: ${{ inputs.node_version }}
+          semantic_release_version: ${{ inputs.semantic_release_version }}
+          conventional_changelog_version: ${{ inputs.conventional_changelog_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+  build:
+    name: Build
+    needs: [ commit_lint, code_lint ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Build
+        id: build
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/gradle-task@v1.0.0
+        with:
+          gradle_command: ${{ inputs.build_command }}
+          java_version: ${{ inputs.java_version }}
+
+  unit_tests:
+    name: Unit Tests
+    needs: [ commit_lint, code_lint ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Unit Tests
+        id: unit_tests
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/unit-tests@v1.0.0
+        with:
+          java_version: ${{ inputs.java_version }}
+          test_command: ${{ inputs.test_command }}
+
+  instrumentation_tests:
+    name: Instrumentation Tests
+    needs: [ commit_lint, code_lint ]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Run Tests
+        id: instrumentation_tests
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/instrumentation-test@v1.0.0
+        with:
+          java_version: ${{ inputs.java_version }}
+          api_level: ${{ inputs.api_level }}
+          instrumentation_test_script: ${{ inputs.instrumentation_test_script }}
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [ determine_version, build, unit_tests, instrumentation_tests ]
+    if: needs.determine_version.outputs.releaseType != ''
+    outputs:
+      releaseType: ${{ steps.release.outputs.releaseType }}
+      releaseChannel: ${{ steps.release.outputs.releaseChannel }}
+      buildVersion: ${{ steps.release.outputs.buildVersion }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Release
+        id: release
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/release@v1.0.0
+        with:
+          node_version: ${{ inputs.node_version }}
+          semantic_release_version: ${{ inputs.semantic_release_version }}
+          conventional_changelog_version: ${{ inputs.conventional_changelog_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+  publish:
+    name: Publication
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.release.outputs.releaseType != ''
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Publish
+        id: publish
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/gradle-task@v1.0.0
+        with:
+          gradle_command: ${{ inputs.publish_command }}
+          java_version: ${{ inputs.java_version }}
+        env:
+          RELEASE_TYPE: ${{ needs.release.outputs.releaseType }}
+          RELEASE_CHANNEL: ${{ needs.release.outputs.releaseChannel }}
+          BUILD_VERSION: ${{ needs.release.outputs.buildVersion }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralUsername }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralPassword }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKey }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKeyId }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKeyPassword }}

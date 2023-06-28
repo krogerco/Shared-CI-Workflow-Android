@@ -1,0 +1,42 @@
+name: Commit
+
+on: [push, workflow_call]
+
+env:
+  node_version: '18'
+  semantic_release_version: '21.0.1'
+  conventional_changelog_version: '5.0.0'
+  commitlint_version: '17'
+
+jobs:
+  commit_lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 0
+      - name: Run Commit Lint
+        id: commitlint
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/commit-lint@v1.0.0
+        with:
+          node_version: ${{ env.node_version }}
+          commitlint_version: ${{ env.commitlint_version}}
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: commit_lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+      - name: Release
+        id: release
+        uses: krogerco/Shared-CI-Action-Android/.github/actions/release@v1.0.0
+        with:
+          node_version: ${{ env.node_version }}
+          semantic_release_version: ${{ env.semantic_release_version }}
+          conventional_changelog_version: ${{ env.conventional_changelog_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
