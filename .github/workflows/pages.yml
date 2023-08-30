@@ -1,0 +1,62 @@
+# Workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
+on:
+  workflow_call:
+    inputs:
+      docs_command:
+        description: 'The gradle command to execute to generate docs'
+        type: string
+        default: 'dokkaHtmlMultiModule'
+      docs_directory:
+        description: 'The documentation directory to publish'
+        type: string
+        default: 'build/dokka/htmlMultiModule'
+      java_distribution:
+        description: 'The distribution of Java to use'
+        type: string
+        default: 'zulu'
+      java_version:
+        description: 'The version of Java to use'
+        type: string
+        default: '11'
+
+# Allow one concurrent deployment
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Java Setup
+        uses: actions/setup-java@v3.9.0
+        with:
+          distribution: ${{ inputs.java_distribution }}
+          java-version: ${{ inputs.java_version }}
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+      - name: Gradle Generate Docs
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ${{ inputs.docs_command }}
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Fix Permissions
+        run: |
+          chmod -v -R +rX "${{ inputs.docs_directory }}" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+      - name: Upload Docs Artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ${{ inputs.docs_directory }}
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
