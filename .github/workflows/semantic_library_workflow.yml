@@ -56,6 +56,10 @@ on:
         type: string
         required: false
         default: 'publish'
+      run_instrumentation_tests:
+        description: 'When true runs instrumentation tests'
+        type: boolean
+        default: true
       semantic_release_version:
         description: 'The version of semantic release to use'
         required: false
@@ -167,6 +171,7 @@ jobs:
 
   instrumentation_tests:
     name: Instrumentation Tests
+    if: inputs.run_instrumentation_tests == true
     needs: [ commit_lint, code_lint ]
     runs-on: macos-latest
     steps:
@@ -183,8 +188,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if:  ${{ !failure() && !cancelled() && needs.determine_version.outputs.releaseType != '' }}
     needs: [ determine_version, build, unit_tests, instrumentation_tests ]
-    if: needs.determine_version.outputs.releaseType != ''
     outputs:
       releaseType: ${{ steps.release.outputs.releaseType }}
       releaseChannel: ${{ steps.release.outputs.releaseChannel }}
@@ -205,8 +210,8 @@ jobs:
   publish:
     name: Publication
     runs-on: ubuntu-latest
+    if: ${{ !failure() && !cancelled() && needs.release.outputs.releaseType != '' }}
     needs: release
-    if: needs.release.outputs.releaseType != ''
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
