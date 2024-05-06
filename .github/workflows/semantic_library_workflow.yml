@@ -35,7 +35,7 @@ on:
         description: 'The version of java to use'
         type: string
         required: false
-        default: '11'
+        default: '17'
       ktlint_version:
         description: 'The version of ktlint to use'
         type: string
