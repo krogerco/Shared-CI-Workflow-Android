@@ -100,8 +100,16 @@ jobs:
           node_version: ${{ inputs.node_version }}
           commitlint_version: ${{ inputs.commitlint_version }}
 
+  wrapper_validation:
+    name: "Wrapper Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gradle/actions/wrapper-validation@v3
+
   code_lint:
     name: Code Lint
+    needs: [ wrapper_validation ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -120,13 +128,6 @@ jobs:
           gradle_command: ${{ inputs.lint_command }}
           java_version: ${{ inputs.java_version }}
           setup_android_sdk: 'false'
-
-  validation:
-    name: "Validation"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gradle/actions/wrapper-validation@v3
 
   determine_version:
     name: Version Determination
@@ -150,7 +151,7 @@ jobs:
 
   build:
     name: Build
-    needs: [ commit_lint, code_lint, validation ]
+    needs: [ commit_lint, code_lint ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -164,7 +165,7 @@ jobs:
 
   unit_tests:
     name: Unit Tests
-    needs: [ commit_lint, code_lint, validation ]
+    needs: [ commit_lint, code_lint ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
