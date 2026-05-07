@@ -102,7 +102,6 @@ jobs:
 
   code_lint:
     name: Code Lint
-    needs: [ wrapper_validation ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
