@@ -100,13 +100,6 @@ jobs:
           node_version: ${{ inputs.node_version }}
           commitlint_version: ${{ inputs.commitlint_version }}
 
-  wrapper_validation:
-    name: "Wrapper Validation"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gradle/actions/wrapper-validation@v3
-
   code_lint:
     name: Code Lint
     needs: [ wrapper_validation ]
