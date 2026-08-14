@@ -1,0 +1,25 @@
+{
+  "name": "Conventional Commits",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": [
+        "~ALL"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "type": "commit_message_pattern",
+      "parameters": {
+        "operator": "regex",
+        "pattern": "^(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(?<scope>\\((?:\\w+|-)+\\))?(?<breaking>!)?(?<subject>:\\s[a-z]+.*)|^(?<merge>Merge \\w+)",
+        "negate": false,
+        "name": "Commit messages must be in Conventional Commit format"
+      }
+    }
+  ],
+  "bypass_actors": []
+}

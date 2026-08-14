@@ -1,0 +1,23 @@
+name: Propagate Repository Rulesets
+
+on:
+  workflow_dispatch:
+  # Trigger when rulesets are modified in this repository
+  # Or when the propagation config/script changes
+  push:
+    branches:
+      - main
+    paths:
+      - 'ruleset-templates/**'
+
+jobs:
+  propagate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v7
+
+      - name: Propagate rulesets
+        env:
+          GH_TOKEN: ${{ secrets.RULESET_TOKEN }}
+        run: bash .github/scripts/propagate-rulesets.sh

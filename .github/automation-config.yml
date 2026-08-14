@@ -1,0 +1,4 @@
+repositories:
+  - krogerco/Cache-Android
+  - krogerco/Telemetry-Android
+  - krogerco/bedrock-android
