@@ -56,8 +56,6 @@ while IFS= read -r repo; do
 
     # Check if ruleset already exists in the repository
     EXISTING_RULESET_ID=$(gh api \
-      -H "Accept: application/vnd.github+json" \
-      -H "X-GitHub-Api-Version: 2022-11-28" \
       "/repos/$repo/rulesets" 2>/dev/null | \
       jq -r --arg ruleset_name "$RULESET_NAME" '.[] | select(.name == $ruleset_name) | .id' || echo "")
 
@@ -66,8 +64,6 @@ while IFS= read -r repo; do
 
       ERROR_OUTPUT=$(gh api \
         --method PUT \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
         "/repos/$repo/rulesets/$EXISTING_RULESET_ID" \
         --input "$ruleset_file" 2>&1) || UPDATE_FAILED=true
 
@@ -84,8 +80,6 @@ while IFS= read -r repo; do
 
       ERROR_OUTPUT=$(gh api \
         --method POST \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
         "/repos/$repo/rulesets" \
         --input "$ruleset_file" 2>&1) || CREATE_FAILED=true
 
