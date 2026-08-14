@@ -1,0 +1,101 @@
+{
+  "name": "Default Branch Protections",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": [
+        "refs/heads/main",
+        "refs/heads/alpha",
+        "refs/heads/beta"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "required_linear_history"
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": true,
+        "required_status_checks": [
+          {
+            "context": "push / Build",
+            "integration_id": 15368
+          },
+          {
+            "context": "push / Code Lint",
+            "integration_id": 15368
+          },
+          {
+            "context": "push / Commit Lint",
+            "integration_id": 15368
+          },
+          {
+            "context": "push / Instrumentation Tests",
+            "integration_id": 15368
+          },
+          {
+            "context": "push / Unit Tests",
+            "integration_id": 15368
+          },
+          {
+            "context": "push / Version Determination",
+            "integration_id": 15368
+          }
+        ]
+      }
+    },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews_on_push": true,
+        "required_reviewers": [
+          {
+            "minimum_approvals": 1,
+            "file_patterns": [
+              "*"
+            ],
+            "reviewer": {
+              "id": 6969246,
+              "type": "Team"
+            }
+          }
+        ],
+        "require_code_owner_review": false,
+        "dismissal_restriction": {
+          "enabled": false,
+          "allowed_actors": []
+        },
+        "require_last_push_approval": true,
+        "required_review_thread_resolution": true,
+        "allowed_merge_methods": [
+          "merge",
+          "squash",
+          "rebase"
+        ]
+      }
+    },
+    {
+      "type": "creation"
+    },
+    {
+      "type": "copilot_code_review",
+      "parameters": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      }
+    }
+  ],
+  "bypass_actors": []
+}
