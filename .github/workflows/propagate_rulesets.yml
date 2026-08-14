@@ -19,5 +19,5 @@ jobs:
 
       - name: Propagate rulesets
         env:
-          GH_TOKEN: ${{ secrets.RULESET_PAT }}
+          GH_TOKEN: ${{ secrets.RULESET_TOKEN }}
         run: bash .github/scripts/propagate-rulesets.sh
