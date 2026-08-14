@@ -5,8 +5,8 @@ on:
   # Trigger when rulesets are modified in this repository
   # Or when the propagation config/script changes
   push:
-    # branches:
-      # - main
+    branches:
+      - main
     paths:
       - 'ruleset-templates/**'
 
