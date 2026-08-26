@@ -20,12 +20,12 @@ on:
         description: 'The version of commitlint to use'
         required: false
         type: string
-        default: '17'
+        default: '21'
       conventional_changelog_version:
         description: 'The version of conventional changelog to use'
         required: false
         type: string
-        default: '5.0.0'
+        default: '10.4.0'
       instrumentation_test_script:
         description: 'The script to run for instrumentation test'
         type: string
@@ -50,7 +50,7 @@ on:
         description: 'The version of nodejs to use'
         type: string
         required: false
-        default: '20'
+        default: '24'
       publish_command:
         description: 'The gradle command for publishing'
         type: string
@@ -64,7 +64,7 @@ on:
         description: 'The version of semantic release to use'
         required: false
         type: string
-        default: '21.0.1'
+        default: '25.0.9'
       test_command:
         description: 'The gradle command for running your tests'
         type: string
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Run Commit Lint
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Run ktlint
         id: ktlint
         if: inputs.ktlint_version != '-1'
@@ -130,7 +130,7 @@ jobs:
       buildVersion: ${{ steps.determine_version.outputs.buildVersion }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Determine Version
         id: determine_version
         uses: krogerco/Shared-CI-Action-Android/.github/actions/determine-version@v1
@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Build
         id: build
         uses: krogerco/Shared-CI-Action-Android/.github/actions/gradle-task@v1
@@ -161,7 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Unit Tests
         id: unit_tests
         uses: krogerco/Shared-CI-Action-Android/.github/actions/unit-tests@v1
@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Run Tests
         id: instrumentation_tests
         uses: krogerco/Shared-CI-Action-Android/.github/actions/instrumentation-test@v1
@@ -196,7 +196,7 @@ jobs:
       buildVersion: ${{ steps.release.outputs.buildVersion }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Release
         id: release
         uses: krogerco/Shared-CI-Action-Android/.github/actions/release@v1
@@ -216,7 +216,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Publish
         id: publish
         uses: krogerco/Shared-CI-Action-Android/.github/actions/gradle-task@v1
